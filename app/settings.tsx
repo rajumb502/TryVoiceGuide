@@ -1,21 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import { Stack, router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
+  Alert,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Alert,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, router } from 'expo-router';
 import { StorageService } from '../services/StorageService';
+import { googleAuthService } from '../services/googleAuth';
 
 export default function SettingsScreen() {
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -26,9 +28,7 @@ export default function SettingsScreen() {
       setIsLoading(true);
       const storage = StorageService.getInstance();
       const apiKey = storage.getItem('gemini_api_key');
-      if (apiKey) {
-        setGeminiApiKey(apiKey);
-      }
+      if (apiKey) setGeminiApiKey(apiKey);
     } catch (error) {
       console.error('Error loading settings:', error);
     } finally {
@@ -74,6 +74,22 @@ export default function SettingsScreen() {
     Alert.alert('Success', 'API key format is valid! You can now save the settings.');
   };
 
+  const authenticateGmail = async () => {
+    setIsAuthenticating(true);
+    try {
+      const success = await googleAuthService.signIn();
+      if (success) {
+        Alert.alert('Success', 'Gmail authenticated successfully!');
+      } else {
+        Alert.alert('Error', 'Gmail authentication failed');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Authentication failed');
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen 
@@ -108,6 +124,23 @@ export default function SettingsScreen() {
           >
             <Text style={styles.buttonText}>
               {isLoading ? 'Testing...' : 'Test API Key'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Gmail Integration</Text>
+          <Text style={styles.helpText}>
+            Connect your Gmail to enable email context in conversations.
+          </Text>
+          
+          <TouchableOpacity
+            style={[styles.testButton, isAuthenticating && styles.disabledButton]}
+            onPress={authenticateGmail}
+            disabled={isAuthenticating}
+          >
+            <Text style={styles.buttonText}>
+              {isAuthenticating ? 'Authenticating...' : 'Connect Gmail'}
             </Text>
           </TouchableOpacity>
         </View>

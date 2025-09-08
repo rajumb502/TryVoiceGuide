@@ -1,5 +1,6 @@
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { Stack, router } from 'expo-router';
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -21,6 +22,8 @@ interface Message {
 }
 
 export default function ChatScreen() {
+  // signin to Google services
+  useEffect(() => { () => GoogleSignin.configure() }, [])
   const geminiService = useMemo(() => GeminiLLM.getInstance(), []);
 
   const [messages, setMessages] = useState<Message[]>([
